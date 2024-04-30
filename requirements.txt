@@ -1,0 +1,13 @@
+openai
+langchain
+langchain_openai
+chromadb
+docx2txt
+pypdf
+streamlit
+tiktoken
+boto3
+faiss-cpu
+python-docx
+fpdf
+PyPDF2
