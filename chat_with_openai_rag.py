@@ -106,7 +106,7 @@ if __name__ == "__main__":
     <style>
     [data-testid="stAppViewContainer"] > .main {{
     background-image: url("https://1000logos.net/wp-content/uploads/2021/05/Vanguard-logo.png");
-    background-size: cover;
+    background-size: contain;
     background-position: center center;
     background-repeat: no-repeat;
     background-attachment: local;
