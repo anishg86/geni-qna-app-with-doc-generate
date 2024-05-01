@@ -116,25 +116,26 @@ if __name__ == "__main__":
 
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
-    st.title(':orange[Gen AI Q&A App]')
+    st.title(':orange[Gen AI Content Creator]')
 
     with st.sidebar:
 
-        uploaded_file = st.file_uploader('**Upload a file**:', type=['.pdf','.docx','txt','.csv','.xlsx','.yaml'])
-        chunk_size = st.number_input('**Chunk size**:',min_value=100,max_value=2048,value=512,on_change=clear_history)
-        k = st.number_input('**k**:', min_value=1, max_value=20, value=3,on_change=clear_history)
-        add_data = st.button('Submit',on_click=clear_history)
+        uploaded_file = st.file_uploader('**Upload a file**:', type=['.pdf', '.docx', 'txt', '.csv', '.xlsx', '.yaml'])
+        content_api_key = st.text_input('**API Key:**', key='content_api_key')
+        chunk_size = st.number_input('**Chunk size**:', min_value=100, max_value=2048, value=512,
+                                     on_change=clear_history)
+        k = st.number_input('**k**:', min_value=1, max_value=20, value=3, on_change=clear_history)
+        add_data = st.button('Submit', on_click=clear_history)
         flush_data = st.button('Clear Form', on_click=flush_data)
-
 
         if uploaded_file and add_data:
             with st.spinner('Uploading file and chunking...'):
                 bytes_data = uploaded_file.read()
-                file_name = os.path.join('./',uploaded_file.name)
-                with open(file_name,'wb') as f:
+                file_name = os.path.join('./', uploaded_file.name)
+                with open(file_name, 'wb') as f:
                     f.write(bytes_data)
                 data = load_document(file_name)
-                chunks = chunk_data(data,chunk_size=chunk_size)
+                chunks = chunk_data(data, chunk_size=chunk_size)
                 st.write(f'Chunk size: {chunk_size}, Chunks: {len(chunks)}')
                 tokens, embedding_cost = calculate_embedding_cost(chunks)
                 st.write(f'Embedding cost:${embedding_cost:.4f}')
@@ -142,21 +143,93 @@ if __name__ == "__main__":
                 st.session_state.vs = vector_store
                 st.success(':orange[File uploaded, chunked and embedded successfully.]')
 
-    question = st.text_input('**:orange[Ask Question:]**',key='user_question')
-    if question:
-        if 'vs' in st.session_state:
-            vector_store = st.session_state.vs
-            answer = ask_and_get_answer(vector_store,question,k)
-            if answer:
-                st.text_area('**:orange[LLM Answer:]** ', value=answer,height=500,key='llm_user')
+    app_option = st.selectbox('**:orange[Action Menu]**', ('Please select the action',
+                                                           f'Generate content for {content_api_key} API:Introduction',
+                                                           f'Generate content for {content_api_key} API:Methodology',
+                                                           f'Generate content for {content_api_key} API:Sample Request Response',
+                                                           'Q&A App'))
 
-        st.divider()
-        if 'history' not in st.session_state:
-            st.session_state.history = ''
-        value = f'Q: {question}\nA: {answer}'
-        current_chat_with_history =f'{value} \n {"-" *100} \n {st.session_state.history}'
-        st.session_state.history = current_chat_with_history
-        with open('chat_history.txt','a') as chat_file:
-            chat_file.write(current_chat_with_history)
-        history_value = st.session_state.history
-        st.text_area(label='**:orange[Chat History]**', value=history_value, key='history', height=500)
+    api_content_data = {}
+
+    if 'Introduction' in app_option:
+        vector_store = st.session_state.vs
+        intro_answer = ask_and_get_answer(vector_store, 'Generate a brief introduction of the API in two paragraphs', k)
+        if intro_answer:
+            st.text_area('**:orange[Content:]** ', value=intro_answer, height=500, key='intro_content')
+            save_intro = st.button('Save')
+            if save_intro:
+                api_content_data['introduction'] = intro_answer
+    if 'Methodology' in app_option:
+        vector_store = st.session_state.vs
+        methodology_answer = ask_and_get_answer(vector_store, 'Generate Methodology of the API in two paragraphs', k)
+        if methodology_answer:
+            st.text_area('**:orange[Content:]** ', value=methodology_answer, height=500, key='methodology_content')
+            save_methodology = st.button('Save')
+            if save_methodology:
+                api_content_data['methodology'] = methodology_answer
+    if 'Sample Request Response' in app_option:
+        vector_store = st.session_state.vs
+        req_res_answer = ask_and_get_answer(vector_store, 'Generate Sample Request Response of the API with details', k)
+        if req_res_answer:
+            st.text_area('**:orange[Content:]** ', value=req_res_answer, height=500, key='req_res_content')
+            save_req_res = st.button('Save')
+            if save_req_res:
+                api_content_data['req_res'] = req_res_answer
+    if api_content_data:
+        # content_doc = Document()
+        content_pdf = fpdf.FPDF()
+
+        if 'introduction' in api_content_data:
+            # content_doc.add_heading('Introduction', 0)
+            # p = content_doc.add_paragraph(api_content_data['introduction'])
+            content_pdf.add_page()
+            content_pdf.set_font("Arial", size=16, style="B")
+            content_pdf.cell(200, 18, txt="Introduction", ln=True, align='L')
+            content_pdf.set_font("Arial", size=12)
+            content_pdf.multi_cell(180, 8, txt=api_content_data['introduction'])
+            st.success(':orange[Introduction added successfully.]')
+        if 'methodology' in api_content_data:
+            # content_doc.add_heading('Methodology', 0)
+            # p = content_doc.add_paragraph(api_content_data['methodology'])
+            content_pdf.add_page()
+            content_pdf.set_font("Arial", size=16, style="B")
+            content_pdf.cell(200, 18, txt="Methodology", ln=True, align='L')
+            content_pdf.set_font("Arial", size=12)
+            content_pdf.multi_cell(180, 8, txt=api_content_data['methodology'])
+            st.success(':orange[Methodology added successfully.]')
+        if 'req_res' in api_content_data:
+            # content_doc.add_heading('Sample Request Response', 0)
+            # p = content_doc.add_paragraph(api_content_data['req_res'])
+            content_pdf.add_page()
+            content_pdf.set_font("Arial", size=16, style="B")
+            content_pdf.cell(200, 18, txt="Sample Request Response", ln=True, align='L')
+            content_pdf.set_font("Arial", size=12)
+            content_pdf.multi_cell(180, 8, txt=api_content_data['req_res'])
+            st.success(':orange[Sample Request Response added successfully.]')
+        # content_doc.save('pages/api_data.docx')
+        content_pdf.output('api_data.pdf')
+        with open('api_data.pdf', "rb") as f:
+            base64_pdf = base64.b64encode(f.read()).decode("utf-8")
+            pdf_display = F'<iframe src="data:application/pdf;base64,\
+                {base64_pdf}" width="700" height="500" type="application/pdf"></iframe>'
+            st.markdown(pdf_display, unsafe_allow_html=True)
+
+    if (app_option == 'Q&A App'):
+        question = st.text_input('**:orange[Ask Question:]**', key='user_question')
+        if question:
+            if 'vs' in st.session_state:
+                vector_store = st.session_state.vs
+                answer = ask_and_get_answer(vector_store, question, k)
+                if answer:
+                    st.text_area('**:orange[LLM Answer:]** ', value=answer, height=500, key='llm_user')
+
+            st.divider()
+            if 'history' not in st.session_state:
+                st.session_state.history = ''
+            value = f'Q: {question}\nA: {answer}'
+            current_chat_with_history = f'{value} \n {"-" * 100} \n {st.session_state.history}'
+            st.session_state.history = current_chat_with_history
+            with open('chat_history.txt', 'a') as chat_file:
+                chat_file.write(current_chat_with_history)
+            history_value = st.session_state.history
+            st.text_area(label='**:orange[Chat History]**', value=history_value, key='history', height=500)

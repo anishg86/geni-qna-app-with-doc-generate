@@ -5,7 +5,6 @@ import fpdf
 import yaml
 import json
 import streamlit as st
-from docx import Document
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 
