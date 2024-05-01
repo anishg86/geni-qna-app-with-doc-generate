@@ -105,7 +105,7 @@ if __name__ == "__main__":
     page_bg_img = f"""
     <style>
     [data-testid="stAppViewContainer"] > .main {{
-    background-image: url("https://1000logos.net/wp-content/uploads/2021/05/Vanguard-logo.png");
+    background-image: url("https://s3.wns.com/S3_5/Images/Capabilities/Analytics/triange-generative-ai/Gen-AI-powered.jpg");
     background-size: contain;
     background-position: center center;
     background-repeat: no-repeat;
